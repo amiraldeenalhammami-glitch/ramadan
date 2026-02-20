@@ -10,20 +10,8 @@ const App: React.FC = () => {
   const [showInstallOverlay, setShowInstallOverlay] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isAlertEnabled, setIsAlertEnabled] = useState(() => localStorage.getItem('isAlertEnabled') !== 'false');
-  const [alertDisabledUntil, setAlertDisabledUntil] = useState<number | null>(() => {
-    const saved = localStorage.getItem('alertDisabledUntil');
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const lastSoundTriggerRef = useRef<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audioUrl = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
-    audioRef.current = new Audio(audioUrl);
-    audioRef.current.preload = 'auto';
-    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -86,26 +74,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const now = currentTime;
     const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-    
-    if (alertDisabledUntil && now.getTime() > alertDisabledUntil) {
-      setIsAlertEnabled(true);
-      setAlertDisabledUntil(null);
-      localStorage.removeItem('alertDisabledUntil');
-    }
-
-    if (isAlertEnabled && timeStr !== lastSoundTriggerRef.current) {
-      const diffDays = Math.floor((now.getTime() - RAMADAN_START_DATE_2026.getTime()) / 86400000);
-      const dayData = RAMADAN_DATA_2026[diffDays];
-      
-      if (dayData) {
-        const isPrayerTime = Object.values(dayData.times).includes(timeStr);
-        if (isPrayerTime) {
-          audioRef.current?.play().catch(() => {});
-          lastSoundTriggerRef.current = timeStr;
-        }
-      }
-    }
-  }, [currentTime, isAlertEnabled, alertDisabledUntil]);
+  }, [currentTime]);
 
   const appStatus = useMemo(() => {
     const now = currentTime;
@@ -199,31 +168,8 @@ const App: React.FC = () => {
     return null;
   }, [currentTime, todayData]);
 
-  const toggleAlert = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newState = !isAlertEnabled;
-    setIsAlertEnabled(newState);
-    if (!newState) {
-      const until = Date.now() + 24 * 60 * 60 * 1000;
-      setAlertDisabledUntil(until);
-      localStorage.setItem('alertDisabledUntil', JSON.stringify(until));
-    } else {
-      setAlertDisabledUntil(null);
-      localStorage.removeItem('alertDisabledUntil');
-    }
-    localStorage.setItem('isAlertEnabled', JSON.stringify(newState));
-  };
-
-  const previewSound = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    }
-  };
-
   return (
-    <div className="min-h-screen islamic-pattern text-slate-900 pb-24 overflow-x-hidden selection:bg-amber-300 antialiased" onClick={() => { if(audioRef.current) { audioRef.current.play().then(() => {audioRef.current?.pause(); audioRef.current!.currentTime=0;}).catch(()=>{})} }}>
+    <div className="min-h-screen islamic-pattern text-slate-900 pb-24 overflow-x-hidden selection:bg-amber-300 antialiased">
       
       {/* نافذة التثبيت الذكية */}
       {showInstallOverlay && !isStandalone && (
@@ -238,8 +184,8 @@ const App: React.FC = () => {
                 <h3 className="text-2xl font-black font-amiri text-slate-900">ثبت تطبيق الإمساكية الآن</h3>
                 <p className="text-slate-600 font-bold text-base leading-relaxed px-4">
                   {isIOS 
-                    ? "تابع المواقيت والتنبيهات حتى بدون إنترنت بلمسة واحدة من شاشتك الرئيسية." 
-                    : "احصل على وصول فوري وتنبيهات الأذان بضغطة زر واحدة ليعمل التطبيق كتطبيق أصلي."}
+                    ? "تابع المواقيت حتى بدون إنترنت بلمسة واحدة من شاشتك الرئيسية." 
+                    : "احصل على وصول فوري بضغطة زر واحدة ليعمل التطبيق كتطبيق أصلي."}
                 </p>
               </div>
               <div className="flex flex-col gap-3">
@@ -347,17 +293,6 @@ const App: React.FC = () => {
                     </span>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-10 flex flex-col md:flex-row items-center gap-5">
-                <button onClick={toggleAlert} className={`flex items-center gap-3 px-10 py-4 rounded-2xl font-black font-amiri text-lg transition-all shadow-lg transform hover:scale-105 active:scale-95 border-b-4 ${isAlertEnabled ? 'bg-red-500 text-white border-red-700' : 'bg-amber-400 text-slate-900 border-amber-600'}`}>
-                  {isAlertEnabled ? <BellOff size={24} /> : <Bell size={24} />}
-                  <span>{isAlertEnabled ? "إيقاف المنبه" : "تفعيل المنبه الصوتي لكل صلاة"}</span>
-                </button>
-                <button onClick={previewSound} className="group p-5 bg-white rounded-full text-slate-600 hover:text-amber-600 transition-all border-2 border-slate-100 shadow-md flex items-center gap-3">
-                  <div className="bg-slate-50 p-2 rounded-full group-hover:bg-amber-50 transition-colors"><Volume2 size={28} className="group-hover:animate-bounce" /></div>
-                  <span className="font-bold text-sm md:text-base font-amiri">اختبار الصوت</span>
-                </button>
               </div>
 
               {!isStandalone && (

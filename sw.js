@@ -9,8 +9,7 @@ const ASSETS_TO_CACHE = [
   'https://esm.sh/react@^19.2.4',
   'https://esm.sh/react-dom@^19.2.4/',
   'https://esm.sh/lucide-react@^0.564.0',
-  'https://drive.google.com/uc?id=1oE13o9JSXGFiuTr2QqNr_CclDKr_sAn_',
-  'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'
+  'https://drive.google.com/uc?id=1QqeLFUXweTt8T2ItmcvHGoMmKVfGl95A'
 ];
 
 // مرحلة التثبيت: تخزين الملفات الأساسية
